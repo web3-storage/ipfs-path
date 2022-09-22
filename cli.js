@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import sade from 'sade'
 import archy from 'archy'
 import colors from 'colors'

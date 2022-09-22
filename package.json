@@ -4,6 +4,9 @@
   "description": "Extract UnixFS paths from an existing DAG with merkle proofs.",
   "main": "index.js",
   "type": "module",
+  "bin": {
+    "ipfs-car-tools": "cli.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
