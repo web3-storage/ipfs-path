@@ -1,9 +1,8 @@
+import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
-import { Block } from 'multiformats/block'
 import * as dagPB from '@ipld/dag-pb'
 
 /**
- * @typedef {import('multiformats').CID} CID
  * @typedef {{ get: (key: CID) => Promise<Block|undefined> }} Blockstore
  * @typedef {{ cid: CID, bytes: Uint8Array }} Block
  */
@@ -23,7 +22,12 @@ export function extract (blockstore, path) {
     }
   
     const parts = path.split('/')
-    const rootCid = CID.parse(parts.shift())
+    const rootCidStr = parts.shift()
+    if (!rootCidStr) {
+      throw new Error(`no root cid found in path`)
+    }
+
+    const rootCid = CID.parse(rootCidStr)
   
     const rootBlock = await blockstore.get(rootCid)
     if (!rootBlock) {
@@ -34,20 +38,24 @@ export function extract (blockstore, path) {
     while (parts.length) {
       const part = parts.shift()
       switch (block.cid.code) {
-        case dagPB: {
+        case dagPB.code: {
           const node = dagPB.decode(block.bytes)
-          const link = Array.from(new Block({ ...block, value: node }).links()).find(([name]) => name === part)
+          const link = node.Links.find(link => link.Name === part)
           if (!link) {
             throw new Error(`missing link "${part}" in CID: ${block.cid}`)
           }
           yield block
-          block = await blockstore.get(link[1])
+          const linkBlock = await blockstore.get(link.Hash)
+          if (!linkBlock) {
+            throw new Error(`missing link block: ${linkBlock}`)
+          }
+          block = linkBlock
           break
         }
         case raw.code:
           throw new Error(`missing link "${part}" in CID: ${block.cid}`)
         default:
-          throw new Error(`unsupported codec: ${cid.code}`)
+          throw new Error(`unsupported codec: ${block.cid.code}`)
       }
     }
     yield * exportBlocks(blockstore, block)
@@ -62,18 +70,24 @@ export function extract (blockstore, path) {
 async function * exportBlocks (blockstore, block) {
   yield block
   switch (block.cid.code) {
-    case dagPB: {
+    case dagPB.code: {
       const node = dagPB.decode(block.bytes)
-      const links = new Block({ ...block, value: node }).links()
-      const blocks = await Promise.all(links.map(([, cid]) => blockstore.get(cid)))
+      const links = node.Links.map(link => link.Hash)
+      const blocks = await Promise.all(links.map(async (cid) => {
+        const block = await blockstore.get(cid)
+        if (!block) {
+          throw new Error(`missing block for cid: ${cid}`)
+        }
+        return block
+      }))
       for (const b of blocks) {
-        yield * exportBlocks(b)
+        yield * exportBlocks(blockstore, b)
       }
       break
     }
     case raw.code:
       break
     default:
-      throw new Error(`unsupported codec: ${cid.code}`)
+      throw new Error(`unsupported codec: ${block.cid.code}`)
   }
 }

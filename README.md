@@ -13,13 +13,14 @@ npm i ipfs-car-extract
 ## Usage
 
 ```js
-import { CarIndexedReader, CarWriter } from '@ipld/car/indexed-reader'
+import { CarIndexedReader } from '@ipld/car/indexed-reader'
+import { CarWriter } from '@ipld/car/writer'
 import { extract } from 'ipfs-car-extract'
 import { Readable } from 'stream'
 
 const reader = await CarIndexedReader.fromFile('my.car')
 const blocks = extract(reader, 'bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png')
-const { writer, out } = await CarWriter.create('bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu')
+const { writer, out } = CarWriter.create('bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu')
 
 Readable.from(out).pipe(process.stdout)
 
