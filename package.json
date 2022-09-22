@@ -1,0 +1,22 @@
+{
+  "name": "ipfs-car-extract",
+  "version": "0.0.0",
+  "description": "Extract UnixFS paths from an existing DAG with merkle proofs.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "IPLD",
+    "CAR",
+    "UnixFS",
+    "extract"
+  ],
+  "author": "Alan Shaw",
+  "license": "Apache-2.0 OR MIT",
+  "dependencies": {
+    "@ipld/car": "^4.1.5",
+    "multiformats": "^9.9.0"
+  }
+}
