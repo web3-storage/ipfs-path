@@ -1,6 +1,8 @@
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import * as dagPB from '@ipld/dag-pb'
+import { UnixFS } from 'ipfs-unixfs'
+import { findShardedBlock } from './hamt.js'
 
 /**
  * @typedef {{ get: (key: CID) => Promise<Block|undefined> }} Blockstore
@@ -20,15 +22,15 @@ export function extract (blockstore, path) {
     if (path.endsWith('/')) {
       path = path.slice(0, -1)
     }
-  
+
     const parts = path.split('/')
     const rootCidStr = parts.shift()
     if (!rootCidStr) {
-      throw new Error(`no root cid found in path`)
+      throw new Error('missing root CID in path')
     }
 
     const rootCid = CID.parse(rootCidStr)
-  
+
     const rootBlock = await blockstore.get(rootCid)
     if (!rootBlock) {
       throw new Error(`missing root block: ${rootBlock}`)
@@ -39,21 +41,31 @@ export function extract (blockstore, path) {
       const part = parts.shift()
       switch (block.cid.code) {
         case dagPB.code: {
-          const node = dagPB.decode(block.bytes)
-          const link = node.Links.find(link => link.Name === part)
-          if (!link) {
-            throw new Error(`missing link "${part}" in CID: ${block.cid}`)
-          }
           yield block
-          const linkBlock = await blockstore.get(link.Hash)
-          if (!linkBlock) {
-            throw new Error(`missing link block: ${linkBlock}`)
+
+          const node = dagPB.decode(block.bytes)
+          const unixfs = UnixFS.unmarshal(node.Data)
+
+          if (unixfs.type === 'hamt-sharded-directory') {
+            let lastBlock
+            for await (const shardBlock of findShardedBlock(node, part, blockstore)) {
+              if (lastBlock) yield lastBlock
+              lastBlock = shardBlock
+            }
+            block = lastBlock
+          } else {
+            const link = node.Links.find(link => link.Name === part)
+            if (!link) {
+              throw new Error(`missing link "${part}" in CID: ${block.cid}`)
+            }
+            const linkBlock = await blockstore.get(link.Hash)
+            if (!linkBlock) {
+              throw new Error(`missing block: ${linkBlock}`)
+            }
+            block = linkBlock
           }
-          block = linkBlock
           break
         }
-        case raw.code:
-          throw new Error(`missing link "${part}" in CID: ${block.cid}`)
         default:
           throw new Error(`unsupported codec: ${block.cid.code}`)
       }
@@ -76,7 +88,7 @@ async function * exportBlocks (blockstore, block) {
       const blocks = await Promise.all(links.map(async (cid) => {
         const block = await blockstore.get(cid)
         if (!block) {
-          throw new Error(`missing block for cid: ${cid}`)
+          throw new Error(`missing block: ${cid}`)
         }
         return block
       }))

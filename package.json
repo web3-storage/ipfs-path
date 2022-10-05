@@ -21,6 +21,8 @@
   "dependencies": {
     "@ipld/car": "^4.1.5",
     "@ipld/dag-pb": "^2.1.18",
+    "@multiformats/murmur3": "^1.1.3",
+    "hamt-sharding": "^3.0.1",
     "ipfs-unixfs": "^7.0.0",
     "ipfs-unixfs-exporter": "^8.0.6",
     "multiformats": "^9.9.0"
