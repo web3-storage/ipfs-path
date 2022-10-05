@@ -31,5 +31,13 @@
     "archy": "^1.0.0",
     "colors": "^1.4.0",
     "sade": "^1.8.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alanshaw/ipfs-car-extract.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alanshaw/ipfs-car-extract/issues"
+  },
+  "homepage": "https://github.com/alanshaw/ipfs-car-extract#readme"
 }
