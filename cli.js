@@ -5,6 +5,8 @@ import colors from 'colors'
 import { extract } from './index.js'
 import * as raw from 'multiformats/codecs/raw'
 import * as dagPb from '@ipld/dag-pb'
+import * as dagCbor from '@ipld/dag-cbor'
+import * as dagJson from '@ipld/dag-json'
 import { CarBlockIterator, CarWriter, CarIndexedReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import { decode as blockDecode } from 'multiformats/block'
@@ -15,7 +17,9 @@ import { exporter } from 'ipfs-unixfs-exporter'
 
 const Decoders = {
   [raw.code]: raw,
-  [dagPb.code]: dagPb
+  [dagPb.code]: dagPb,
+  [dagCbor.code]: dagCbor,
+  [dagJson.code]: dagJson
 }
 
 const cli = sade('ipfs-car-tools')
@@ -49,6 +53,7 @@ cli.command('tree <car>')
 
     for await (const block of reader.blocks()) {
       const decoder = Decoders[block.cid.code]
+      if (!decoder) throw new Error(`Missing decoder: ${block.cid.code}`)
       const multiformatsBlock = await blockDecode({ bytes: block.bytes, codec: decoder, hasher })
 
       let node = allNodes.get(block.cid.toString())
