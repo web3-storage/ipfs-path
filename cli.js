@@ -15,20 +15,16 @@ import { createReadStream, createWriteStream } from 'fs'
 import { Readable } from 'stream'
 import { exporter } from 'ipfs-unixfs-exporter'
 
-const Decoders = {
-  [raw.code]: raw,
-  [dagPb.code]: dagPb,
-  [dagCbor.code]: dagCbor,
-  [dagJson.code]: dagJson
-}
+/** @type Map<number,import('multiformats').BlockDecoder<any, any>> */
+const Decoders = new Map([raw, dagPb, dagCbor, dagJson].map(d => [d.code, d]))
 
-const cli = sade('ipfs-car-tools')
+const cli = sade('ipfs-path')
 
-cli.command('extract <path> <car>')
-  .describe('Extract IPFS path blocks from a CAR')
-  .example('ipfs-car-tools extract bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png my.car > image.png.car')
+cli.command('extract <path> <car>', 'Extract IPFS path blocks from a CAR', { default: true })
+  .example('extract bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png my.car > image.png.car')
   .option('-o, --output', 'Output path for CAR')
   .action(async (path, car, options) => {
+    console.log({ path, car, options })
     const reader = await CarIndexedReader.fromFile(car)
     const blocks = extract(reader, path)
     const { writer, out } = CarWriter.create(getRootCidFromPath(path))
@@ -52,7 +48,7 @@ cli.command('tree <car>')
     const allNodes = new Map([[roots[0].toString(), archyRoot]])
 
     for await (const block of reader.blocks()) {
-      const decoder = Decoders[block.cid.code]
+      const decoder = Decoders.get(block.cid.code)
       if (!decoder) throw new Error(`Missing decoder: ${block.cid.code}`)
       const multiformatsBlock = await blockDecode({ bytes: block.bytes, codec: decoder, hasher })
 
@@ -65,7 +61,7 @@ cli.command('tree <car>')
         node = missingNode
       }
 
-      for (const [_, linkCid] of multiformatsBlock.links()) {
+      for (const [, linkCid] of multiformatsBlock.links()) {
         let target = allNodes.get(linkCid.toString())
         if (!target) {
           const hasCid = await reader.has(linkCid)
@@ -84,11 +80,12 @@ cli.command('tree <car>')
 
 cli.command('export <path> <car>')
   .describe('Export a UnixFS file from a CAR')
-  .example('ipfs-car-tools export bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png image.png.car > image.png')
+  .example('export bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png image.png.car > image.png')
   .option('-o, --output', 'Output path for file')
   .action(async (path, car, options) => {
     const blocks = (await CarBlockIterator.fromIterable(createReadStream(car)))[Symbol.asyncIterator]()
     const blockstore = {
+      /** @param {CID} key */
       async get (key) {
         const { done, value } = await blocks.next()
         if (done) throw new Error('unexpected EOF')
@@ -106,6 +103,9 @@ cli.command('export <path> <car>')
 
 cli.parse(process.argv)
 
+/**
+ * @param {string} path
+ */
 function getRootCidFromPath (path) {
   if (path.startsWith('/')) {
     path = path.slice(1)
@@ -117,7 +117,7 @@ function getRootCidFromPath (path) {
   const parts = path.split('/')
   const rootCidStr = parts.shift()
   if (!rootCidStr) {
-    throw new Error(`no root cid found in path`)
+    throw new Error('no root cid found in path')
   }
   return CID.parse(rootCidStr)
 }

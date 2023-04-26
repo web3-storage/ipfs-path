@@ -38,21 +38,19 @@ export function extract (blockstore, path) {
 
     let block = rootBlock
     while (parts.length) {
-      const part = parts.shift()
+      const part = parts.shift() ?? ''
       switch (block.cid.code) {
         case dagPB.code: {
           yield block
 
           const node = dagPB.decode(block.bytes)
-          const unixfs = UnixFS.unmarshal(node.Data)
+          const unixfs = node.Data ? UnixFS.unmarshal(node.Data) : undefined
 
-          if (unixfs.type === 'hamt-sharded-directory') {
-            let lastBlock
+          if (unixfs && unixfs.type === 'hamt-sharded-directory') {
             for await (const shardBlock of findShardedBlock(node, part, blockstore)) {
-              if (lastBlock) yield lastBlock
-              lastBlock = shardBlock
+              yield shardBlock
+              block = shardBlock
             }
-            block = lastBlock
           } else {
             const link = node.Links.find(link => link.Name === part)
             if (!link) {
