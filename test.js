@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { execSync } from 'node:child_process'
-import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { TransformStream } from 'node:stream/web'
 import { CarWriter, CarIndexedReader } from '@ipld/car'
 import * as UnixFS from '@ipld/unixfs'
@@ -36,20 +36,15 @@ test('cli extract dagPB path', async t => {
 
   // @ts-expect-error Link type doesn't satisfy CID type expected.
   const { writer: carWriter, out } = CarWriter.create(dirLink.cid)
-  const fsStream = Readable.from(out).pipe(fs.createWriteStream(carName))
+  const carWritten = pipeline(out, fs.createWriteStream(carName))
 
   for await (const block of readable) {
     await carWriter.put(block)
   }
-
   await carWriter.close()
 
   // wait for car to be written to fs
-  await new Promise((resolve, reject) => {
-    if (fsStream.closed) return resolve(true)
-    fsStream.once('finish', resolve)
-    fsStream.once('error', reject)
-  })
+  await carWritten
 
   execSync(`./cli.js ${path} ${carName} -o ${outName}`)
 
