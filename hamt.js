@@ -7,12 +7,10 @@ import { murmur3128 } from '@multiformats/murmur3'
  * @typedef {{ cid: CID, bytes: Uint8Array }} Block
  * @typedef {{ get: (key: CID) => Promise<Block|undefined> }} Blockstore
  * @typedef {import('multiformats/cid').CID} CID
- * @typedef {import('../types').ExporterOptions} ExporterOptions
  * @typedef {import('@ipld/dag-pb').PBNode} PBNode
  * @typedef {import('@ipld/dag-pb').PBLink} PBLink
  */
 
-// FIXME: this is copy/pasted from ipfs-unixfs-importer/src/options.js
 /**
  * @param {Uint8Array} buf
  */
@@ -64,7 +62,7 @@ const toPrefix = (position) => {
 }
 
 /**
- * @param {import('hamt-sharding').Bucket.BucketPosition<boolean>} position
+ * @param {import('hamt-sharding').BucketPosition<boolean>} position
  */
 const toBucketPath = (position) => {
   let bucket = position.bucket
@@ -141,6 +139,7 @@ export async function * findShardedBlock (node, name, blockstore, context, optio
   }
 
   if (link.Name != null && link.Name.substring(2) === name) {
+    // @ts-expect-error no options on our blockstore
     const block = await blockstore.get(link.Hash, options)
     if (!block) {
       throw new Error(`missing block: ${link.Hash}`)
@@ -150,7 +149,7 @@ export async function * findShardedBlock (node, name, blockstore, context, optio
   }
 
   context.hamtDepth++
-
+  // @ts-expect-error no options on our blockstore
   const block = await blockstore.get(link.Hash, options)
   if (!block) {
     throw new Error(`missing block: ${link.Hash}`)

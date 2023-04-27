@@ -1,4 +1,4 @@
-# ipfs-car-extract
+# ipfs-path
 
 Extract UnixFS paths from an existing DAG with merkle proofs.
 
@@ -7,7 +7,7 @@ A UnixFS DAG can be large, containing multiple levels of files and directories. 
 ## Install
 
 ```sh
-npm i ipfs-car-extract
+npm i @web3-storage/ipfs-path
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ npm i ipfs-car-extract
 ```js
 import { CarIndexedReader } from '@ipld/car/indexed-reader'
 import { CarWriter } from '@ipld/car/writer'
-import { extract } from 'ipfs-car-extract'
+import { extract } from '@web3-storage/ipfs-path'
 import { Readable } from 'stream'
 
 const reader = await CarIndexedReader.fromFile('my.car')
@@ -32,9 +32,11 @@ await writer.close()
 
 ### CLI
 
+Extact a CAR for the ipfs path from an existing CAR
+
 ```sh
-ipfs-car-extract bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png my.car > image.png.car
+ipfs-path bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png my.car > image.png.car
 
 # You can also extract a DAG that spans multiple CARs:
-# ipfs-car-extract <ipfs-path> <car-file> [...car-file]
+# ipfs-path <ipfs-path> <car-file> [...car-file]
 ```

@@ -35,24 +35,20 @@ export function extract (blockstore, path) {
     if (!rootBlock) {
       throw new Error(`missing root block: ${rootBlock}`)
     }
-
+    yield rootBlock
     let block = rootBlock
     while (parts.length) {
-      const part = parts.shift()
+      const part = parts.shift() ?? ''
       switch (block.cid.code) {
         case dagPB.code: {
-          yield block
-
           const node = dagPB.decode(block.bytes)
-          const unixfs = UnixFS.unmarshal(node.Data)
+          const unixfs = node.Data ? UnixFS.unmarshal(node.Data) : undefined
 
-          if (unixfs.type === 'hamt-sharded-directory') {
-            let lastBlock
+          if (unixfs && unixfs.type === 'hamt-sharded-directory') {
             for await (const shardBlock of findShardedBlock(node, part, blockstore)) {
-              if (lastBlock) yield lastBlock
-              lastBlock = shardBlock
+              yield shardBlock
+              block = shardBlock
             }
-            block = lastBlock
           } else {
             const link = node.Links.find(link => link.Name === part)
             if (!link) {
@@ -62,6 +58,7 @@ export function extract (blockstore, path) {
             if (!linkBlock) {
               throw new Error(`missing block: ${linkBlock}`)
             }
+            yield linkBlock
             block = linkBlock
           }
           break
@@ -80,7 +77,6 @@ export function extract (blockstore, path) {
  * @returns {AsyncIterable<Block>}
  */
 async function * exportBlocks (blockstore, block) {
-  yield block
   switch (block.cid.code) {
     case dagPB.code: {
       const node = dagPB.decode(block.bytes)

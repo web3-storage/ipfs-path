@@ -1,14 +1,19 @@
 {
-  "name": "ipfs-car-extract",
+  "name": "@web3-storage/ipfs-path",
   "version": "1.1.0",
-  "description": "Extract UnixFS paths from an existing DAG with merkle proofs.",
+  "description": "Extract blocks for UnixFS paths from a DAG",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "ipfs-car-tools": "cli.js"
+    "ipfs-path": "cli.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "./cli.js",
+    "prepare": "tsc",
+    "test": "ava",
+    "pretest": "tsc && standard",
+    "lint": "standard",
+    "tsc": "tsc"
   },
   "keywords": [
     "IPLD",
@@ -16,30 +21,38 @@
     "UnixFS",
     "extract"
   ],
-  "author": "Alan Shaw",
+  "contributors": [
+    "Alan Shaw",
+    "olizilla"
+  ],
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
-    "@ipld/car": "^4.1.5",
-    "@ipld/dag-cbor": "^8.0.0",
-    "@ipld/dag-json": "^9.0.1",
-    "@ipld/dag-pb": "^2.1.18",
-    "@multiformats/murmur3": "^1.1.3",
-    "hamt-sharding": "^3.0.1",
-    "ipfs-unixfs": "^7.0.0",
-    "ipfs-unixfs-exporter": "^8.0.6",
-    "multiformats": "^9.9.0"
-  },
-  "devDependencies": {
+    "@ipld/car": "^5.1.1",
+    "@ipld/dag-cbor": "^9.0.0",
+    "@ipld/dag-json": "^10.0.1",
+    "@ipld/dag-pb": "^4.0.2",
+    "@multiformats/murmur3": "^2.1.3",
     "archy": "^1.0.0",
     "colors": "^1.4.0",
+    "hamt-sharding": "^3.0.1",
+    "ipfs-unixfs": "^11.0.0",
+    "ipfs-unixfs-exporter": "^13.1.0",
+    "multiformats": "^11.0.2",
     "sade": "^1.8.1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alanshaw/ipfs-car-extract.git"
+    "url": "git+https://github.com/web3-storage/ipfs-path.git"
   },
   "bugs": {
-    "url": "https://github.com/alanshaw/ipfs-car-extract/issues"
+    "url": "https://github.com/web3-storage/ipfs-path/issues"
   },
-  "homepage": "https://github.com/alanshaw/ipfs-car-extract#readme"
+  "homepage": "https://github.com/web3-storage/ipfs-path#readme",
+  "devDependencies": {
+    "@ipld/unixfs": "^2.1.1",
+    "@types/archy": "^0.0.32",
+    "ava": "^5.2.0",
+    "standard": "^17.0.0",
+    "typescript": "^5.0.4"
+  }
 }
