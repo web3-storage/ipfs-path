@@ -58,6 +58,7 @@ test('cli extract dagPB path', async t => {
   for await (const block of actual.blocks()) {
     blocks.push(block)
   }
+
   t.is(blocks.length, 2, 'extracted car should have 2 out of the 3 blocks in it')
   t.deepEqual(blocks[0].cid, dirLink.cid, 'first block should be the root as we traversed it')
   t.deepEqual(blocks[1].cid, file1Link.cid, 'second block should be file1')

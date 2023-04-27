@@ -24,7 +24,6 @@ cli.command('extract <path> <car>', 'Extract IPFS path blocks from a CAR', { def
   .example('extract bafybeig5uisjbc25pkjwtyq5goocmwr7lz5ln63llrtw4d5s2y7m7nhyeu/path/to/image.png my.car > image.png.car')
   .option('-o, --output', 'Output path for CAR')
   .action(async (path, car, options) => {
-    console.log({ path, car, options })
     const reader = await CarIndexedReader.fromFile(car)
     const blocks = extract(reader, path)
     const { writer, out } = CarWriter.create(getRootCidFromPath(path))

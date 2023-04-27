@@ -1,7 +1,7 @@
 {
   "name": "@web3-storage/ipfs-path",
   "version": "1.1.0",
-  "description": "Extract blocks for a UnixFS paths from a DAG",
+  "description": "Extract blocks for UnixFS paths from a DAG",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -42,12 +42,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alanshaw/ipfs-car-extract.git"
+    "url": "git+https://github.com/web3-storage/ipfs-path.git"
   },
   "bugs": {
-    "url": "https://github.com/alanshaw/ipfs-car-extract/issues"
+    "url": "https://github.com/web3-storage/ipfs-path/issues"
   },
-  "homepage": "https://github.com/alanshaw/ipfs-car-extract#readme",
+  "homepage": "https://github.com/web3-storage/ipfs-path#readme",
   "devDependencies": {
     "@ipld/unixfs": "^2.1.1",
     "@types/archy": "^0.0.32",

@@ -35,14 +35,12 @@ export function extract (blockstore, path) {
     if (!rootBlock) {
       throw new Error(`missing root block: ${rootBlock}`)
     }
-
+    yield rootBlock
     let block = rootBlock
     while (parts.length) {
       const part = parts.shift() ?? ''
       switch (block.cid.code) {
         case dagPB.code: {
-          yield block
-
           const node = dagPB.decode(block.bytes)
           const unixfs = node.Data ? UnixFS.unmarshal(node.Data) : undefined
 
@@ -60,6 +58,7 @@ export function extract (blockstore, path) {
             if (!linkBlock) {
               throw new Error(`missing block: ${linkBlock}`)
             }
+            yield linkBlock
             block = linkBlock
           }
           break
@@ -78,7 +77,6 @@ export function extract (blockstore, path) {
  * @returns {AsyncIterable<Block>}
  */
 async function * exportBlocks (blockstore, block) {
-  yield block
   switch (block.cid.code) {
     case dagPB.code: {
       const node = dagPB.decode(block.bytes)
