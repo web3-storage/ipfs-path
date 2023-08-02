@@ -61,7 +61,9 @@ cli.command('tree <car>')
 
     for await (const block of reader.blocks()) {
       const decoder = Decoders[block.cid.code]
+      if (!decoder) throw new Error(`Missing decoder: 0x${block.cid.code.toString(16)}`)
       const hasher = Hashers[block.cid.multihash.code]
+      if (!hasher) throw new Error(`Missing hasher: 0x${block.cid.multihash.code.toString(16)}`)
       const multiformatsBlock = await blockDecode({ bytes: block.bytes, codec: decoder, hasher })
 
       let node = allNodes.get(block.cid.toString())
